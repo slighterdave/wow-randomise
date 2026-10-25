@@ -1,0 +1,13 @@
+body { font-family: Georgia, serif; background: #1b1410; color: #f0e2c0; max-width: 720px; margin: 0 auto; padding: 1rem; text-align: center; }
+h1 { color: #ffd100; }
+.sub { opacity: .8; }
+section { background: #2a1f17; border: 1px solid #6b4f2a; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+input, select, button { font-size: 1rem; padding: .4rem .6rem; margin: .2rem; border-radius: 4px; border: 1px solid #6b4f2a; }
+button { background: #b8860b; color: #fff; cursor: pointer; }
+button:disabled { opacity: .5; cursor: default; }
+button.danger { background: #8b1a1a; }
+.msg { color: #ff8080; min-height: 1.2em; }
+.stage { font-size: 1.4rem; color: #ffd100; min-height: 1.6em; }
+canvas { max-width: 100%; }
+table { width: 100%; border-collapse: collapse; margin: .5rem 0; }
+th, td { border-bottom: 1px solid #6b4f2a; padding: .4rem; }

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WoW Forever Randomiser</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>⚔️ WoW Forever Randomiser</h1>
+<p class="sub">Party of 4: 1 Tank, 1 Healer, 2 DPS. One of each class. Spin for your fate!</p>
+
+<section>
+  <h2>1. Add yourself</h2>
+  <form id="addForm">
+    <input id="charName" placeholder="Character name" maxlength="40" required>
+    <input id="realName" placeholder="Real name" maxlength="40" required>
+    <button>Add</button>
+  </form>
+  <label>Faction:
+    <select id="faction"><option>Any</option><option>Alliance</option><option>Horde</option></select>
+  </label>
+  <p id="msg" class="msg"></p>
+</section>
+
+<section>
+  <h2>2. Spin</h2>
+  <p>Who is spinning? <select id="who"></select> <button id="spinBtn">Spin the wheels!</button></p>
+  <p id="stage" class="stage"></p>
+  <canvas id="wheel" width="420" height="420"></canvas>
+</section>
+
+<section>
+  <h2>Party</h2>
+  <p id="needed"></p>
+  <table id="party"><thead><tr><th>Character</th><th>Real name</th><th>Role</th><th>Class</th><th>Race</th><th></th></tr></thead><tbody></tbody></table>
+  <button id="resetBtn" class="danger">Reset all spins</button>
+</section>
+<script src="rules.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
