@@ -1,0 +1,8 @@
+{
+  "name": "wow-randomise",
+  "version": "1.0.0",
+  "description": "WoW Classic class/race spinning wheel for a 4-man party",
+  "main": "server.js",
+  "scripts": { "start": "node server.js", "test": "node --test test/*.test.js" },
+  "license": "MIT"
+}
