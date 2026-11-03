@@ -20,7 +20,7 @@
   <label>Faction:
     <select id="faction"><option>Any</option><option>Alliance</option><option>Horde</option></select>
   </label>
-  <p>Each person can block one role, class, and race from their own spin.</p>
+  <p>Each person can block one role, class, and race from their own spin. The role filters available classes, and the class filters available races.</p>
   <p id="msg" class="msg"></p>
 </section>
 
@@ -29,12 +29,17 @@
   <p>Who is spinning? <select id="who"></select> <button id="spinBtn">Spin the wheels!</button></p>
   <p id="stage" class="stage"></p>
   <canvas id="wheel" width="420" height="420"></canvas>
+  <div id="blockList">
+    <h3>Block list</h3>
+    <p>Choose one role, class, and race to exclude from this person's spin. The role filters available classes, and the class filters available races.</p>
+    <div id="blockControls"></div>
+  </div>
 </section>
 
 <section>
   <h2>Party</h2>
   <p id="needed"></p>
-  <table id="party"><thead><tr><th>Character</th><th>Real name</th><th>Role</th><th>Class</th><th>Race</th><th>Block role</th><th>Block class</th><th>Block race</th><th></th></tr></thead><tbody></tbody></table>
+  <table id="party"><thead><tr><th>Character</th><th>Real name</th><th>Role</th><th>Class</th><th>Race</th><th></th></tr></thead><tbody></tbody></table>
   <button id="resetBtn" class="danger">Reset all spins</button>
 </section>
 <script src="rules.js"></script>

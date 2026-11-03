@@ -20,11 +20,15 @@ function render() {
   $('who').innerHTML = state.players.filter((p) => !p.role)
     .map((p) => `<option value="${esc(p.id)}">${esc(p.characterName)}</option>`).join('');
   if (cur) $('who').value = cur;
+  const player = state.players.find((p) => p.id === $('who').value);
+  $('blockControls').innerHTML = player
+    ? ['role', 'className', 'race'].map((key) =>
+      `<label>Block ${key === 'className' ? 'class' : key}: ${renderBlockSelect(player, key)}</label>`).join('')
+    : '<p>Add a person to set their block list.</p>';
   const left = Rules.remainingRoles(assigned());
   $('needed').textContent = left.length ? 'Still needed: ' + left.join(', ') : 'Party complete! 🎉';
   $('party').querySelector('tbody').innerHTML = state.players.map((p) =>
     `<tr><td>${esc(p.characterName)}</td><td>${esc(p.realName)}</td><td>${esc(p.role)}</td><td>${esc(p.className)}</td><td>${esc(p.race)}</td>` +
-    `<td>${renderBlockSelect(p, 'role')}</td><td>${renderBlockSelect(p, 'className')}</td><td>${renderBlockSelect(p, 'race')}</td>` +
     `<td>${p.role ? '' : `<button class="danger" data-del="${esc(p.id)}">✕</button>`}</td></tr>`).join('');
   $('spinBtn').disabled = spinning || !$('who').value || !left.length;
 }
@@ -115,13 +119,25 @@ $('addForm').addEventListener('submit', async (e) => {
 $('faction').addEventListener('change', () => run(() => api('POST', '/api/faction', { faction: $('faction').value })));
 $('resetBtn').addEventListener('click', () => confirm('Clear everyone\'s spins?') && run(() => api('POST', '/api/reset')));
 $('party').addEventListener('click', (e) => { const id = e.target.dataset.del; if (id) run(() => api('DELETE', `/api/players/${id}`)); });
-$('party').addEventListener('change', (e) => {
+$('blockControls').addEventListener('change', (e) => {
   const select = e.target.closest('select[data-block]');
   if (!select) return;
-  const row = select.closest('tr');
+  const player = state.players.find((p) => p.id === $('who').value);
+  if (!player || player.id !== select.dataset.player) return;
   const block = {};
-  row.querySelectorAll('select[data-block]').forEach((el) => { block[el.dataset.block] = el.value; });
-  run(() => api('POST', `/api/players/${select.dataset.player}/block`, block));
+  $('blockControls').querySelectorAll('select[data-block]').forEach((el) => { block[el.dataset.block] = el.value; });
+  if (select.dataset.block === 'role') {
+    if (block.className && !Rules.blockOptions({ role: block.role }, state.faction).classes.includes(block.className)) {
+      block.className = '';
+      block.race = '';
+    } else if (block.race && !Rules.blockOptions({ role: block.role, className: block.className }, state.faction).races.includes(block.race)) {
+      block.race = '';
+    }
+  } else if (select.dataset.block === 'className' && block.race &&
+    !Rules.blockOptions({ role: block.role, className: block.className }, state.faction).races.includes(block.race)) {
+    block.race = '';
+  }
+  run(() => api('POST', `/api/players/${player.id}/block`, block));
 });
 $('spinBtn').addEventListener('click', doSpin);
 $('who').addEventListener('change', render);

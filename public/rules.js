@@ -68,10 +68,13 @@
   function blockOptions(block, faction) {
     block = block || {};
     const ok = (r, c) => RACE_CLASSES[r].includes(c) && (!faction || faction === 'Any' || FACTION[r] === faction);
+    const roleClasses = CLASSES.filter((c) => !block.role || CLASS_ROLES[c].includes(block.role));
     return {
       roles: Object.keys(ROLE_SLOTS),
-      classes: CLASSES.filter((c) => RACES.some((r) => ok(r, c) && (!block.race || r === block.race))),
-      races: RACES.filter((r) => CLASSES.some((c) => ok(r, c) && (!block.className || c === block.className))),
+      classes: roleClasses.filter((c) => RACES.some((r) => ok(r, c) && (!block.race || r === block.race))),
+      races: RACES.filter((r) => block.className
+        ? roleClasses.includes(block.className) && ok(r, block.className)
+        : roleClasses.some((c) => ok(r, c))),
     };
   }
 
