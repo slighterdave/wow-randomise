@@ -33,20 +33,18 @@
   const RACES = Object.keys(RACE_CLASSES);
 
   // roles still needed, given assignments [{role, className}]
-  function remainingRoles(assignments, block) {
+  function remainingRoles(assignments) {
     const left = Object.assign({}, ROLE_SLOTS);
-    if (block && block.role) delete left[block.role];
     assignments.forEach((a) => { if (left[a.role] > 0) left[a.role]--; });
     return Object.keys(left).flatMap((r) => Array(left[r]).fill(r));
   }
 
   // can the still-needed roles be filled with distinct unused classes?
-  function canFill(roles, usedClasses, faction, block) {
+  function canFill(roles, usedClasses, faction) {
     if (!roles.length) return true;
     const [role, ...rest] = roles;
     return CLASSES.some((c) => !usedClasses.includes(c) && CLASS_ROLES[c].includes(role) &&
-      racesFor(c, faction, block).length > 0 && c !== (block && block.className) &&
-      canFill(rest, usedClasses.concat(c), faction, block));
+      racesFor(c, faction).length > 0 && canFill(rest, usedClasses.concat(c), faction));
   }
 
   function racesFor(className, faction, block) {
@@ -56,13 +54,14 @@
 
   function availableClasses(role, assignments, faction, block) {
     const used = assignments.map((a) => a.className);
-    const rest = remainingRoles(assignments, block);
+    if (block && block.role === role) return [];
+    const rest = remainingRoles(assignments);
     const idx = rest.indexOf(role);
     if (idx < 0) return [];
     rest.splice(idx, 1);
     return CLASSES.filter((c) => !used.includes(c) && c !== (block && block.className) &&
       CLASS_ROLES[c].includes(role) && racesFor(c, faction, block).length > 0 &&
-      canFill(rest, used.concat(c), faction, block));
+      canFill(rest, used.concat(c), faction));
   }
 
   // What can be blocked: only races/classes that still form a real combo with the other pick.
@@ -85,7 +84,8 @@
   }
 
   function validate(assignments, pick, faction, block) {
-    if (!remainingRoles(assignments, block).includes(pick.role)) return 'That role is already full (or blocked).';
+    if (block && block.role === pick.role) return 'That role is blocked for this person.';
+    if (!remainingRoles(assignments).includes(pick.role)) return 'That role is already full.';
     if (!availableClasses(pick.role, assignments, faction, block).includes(pick.className)) return 'That class is not available for that role.';
     if (!racesFor(pick.className, faction, block).includes(pick.race)) return 'That race cannot be that class (or wrong faction).';
     return null;
