@@ -31,6 +31,13 @@ test('blocklist options only offer real combos', () => {
   assert.ok(!R.blockOptions({ className: 'Paladin' }, 'Any').races.includes('Orc'));
   assert.ok(!R.validBlock({ className: 'Paladin', race: 'Orc' }, 'Any'));
 });
+test('blocklist class and race options match the blocked role', () => {
+  const o = R.blockOptions({ role: 'Healer' }, 'Any');
+  assert.deepStrictEqual(o.classes, ['Paladin', 'Druid', 'Priest', 'Shaman']);
+  assert.ok(!o.classes.includes('Hunter'));
+  assert.ok(!o.races.includes('Gnome'));
+  assert.ok(!R.validBlock({ role: 'Healer', className: 'Hunter' }, 'Any'));
+});
 test('blocklist only removes options for the person who set it', () => {
   const b = { role: 'Tank', className: 'Mage', race: 'Orc' };
   assert.ok(R.remainingRoles([]).includes('Tank'));
