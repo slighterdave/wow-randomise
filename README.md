@@ -9,6 +9,7 @@ character name + real name, then spins a wheel for **role → class → race**.
   The wheel also never offers a class that would make a missing role impossible to fill.
 * **Races can repeat** (as many undead as you like). Only races that can really be that class appear.
 * Optional faction lock (Alliance / Horde / Any) so you can all play together.
+* Each person can block one role, class, and race from their own spin; those blocks do not affect anyone else.
 * Names and results are saved on the server, so all five of you see the same party.
 
 Races/classes are the original Classic ones: Human, Dwarf, Night Elf, Gnome, Orc, Undead, Tauren, Troll;

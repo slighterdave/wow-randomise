@@ -13,9 +13,9 @@ const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/cs
 function load() {
   try {
     const s = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-    s.block = s.block || {};
+    delete s.block;
     return s;
-  } catch (e) { return { faction: 'Any', players: [], block: {} }; }
+  } catch (e) { return { faction: 'Any', players: [] }; }
 }
 function save(state) {
   fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
@@ -45,16 +45,20 @@ function handleApi(req, res, body) {
     if (!['Any', 'Alliance', 'Horde'].includes(body.faction)) return send(400, { error: 'Bad faction.' });
     if (assigned(state).length) return send(400, { error: 'Reset before changing faction.' });
     state.faction = body.faction;
-    if (!Rules.validBlock(state.block, state.faction)) state.block = {};
+    state.players.forEach((player) => {
+      if (!Rules.validBlock(player.block, state.faction)) player.block = {};
+    });
     save(state);
     return send(200, state);
   }
-  if (req.method === 'POST' && url === '/api/block') {
-    if (assigned(state).length) return send(400, { error: 'Reset before changing the blocklist.' });
+  if ((m = url.match(/^\/api\/players\/([\w-]+)\/block$/)) && req.method === 'POST') {
+    const player = state.players.find((p) => p.id === m[1]);
+    if (!player) return send(404, { error: 'No such player.' });
+    if (player.role) return send(400, { error: 'Reset this player before changing their blocklist.' });
     const block = {};
     ['role', 'className', 'race'].forEach((k) => { block[k] = String(body[k] || ''); if (!block[k]) delete block[k]; });
     if (!Rules.validBlock(block, state.faction)) return send(400, { error: 'Invalid blocklist.' });
-    state.block = block;
+    player.block = block;
     save(state);
     return send(200, state);
   }
@@ -72,7 +76,7 @@ function handleApi(req, res, body) {
     const player = state.players.find((p) => p.id === m[1]);
     if (!player) return send(404, { error: 'No such player.' });
     if (player.role) return send(400, { error: 'Already rolled.' });
-    const err = Rules.validate(assigned(state), body, state.faction, state.block);
+    const err = Rules.validate(assigned(state), body, state.faction, player.block);
     if (err) return send(400, { error: err });
     Object.assign(player, { role: body.role, className: body.className, race: body.race });
     save(state);

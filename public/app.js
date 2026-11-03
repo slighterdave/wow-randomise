@@ -1,5 +1,5 @@
 const $ = (id) => document.getElementById(id);
-let state = { faction: 'Any', players: [], block: {} };
+let state = { faction: 'Any', players: [] };
 let spinning = false;
 const COLORS = ['#c0392b', '#2980b9', '#27ae60', '#8e44ad', '#d68910', '#16a085', '#7f8c8d', '#c2185b', '#5d6d7e'];
 
@@ -20,26 +20,22 @@ function render() {
   $('who').innerHTML = state.players.filter((p) => !p.role)
     .map((p) => `<option value="${esc(p.id)}">${esc(p.characterName)}</option>`).join('');
   if (cur) $('who').value = cur;
-  const left = Rules.remainingRoles(assigned(), state.block);
+  const left = Rules.remainingRoles(assigned());
   $('needed').textContent = left.length ? 'Still needed: ' + left.join(', ') : 'Party complete! 🎉';
-  renderBlock();
   $('party').querySelector('tbody').innerHTML = state.players.map((p) =>
     `<tr><td>${esc(p.characterName)}</td><td>${esc(p.realName)}</td><td>${esc(p.role)}</td><td>${esc(p.className)}</td><td>${esc(p.race)}</td>` +
+    `<td>${renderBlockSelect(p, 'role')}</td><td>${renderBlockSelect(p, 'className')}</td><td>${renderBlockSelect(p, 'race')}</td>` +
     `<td>${p.role ? '' : `<button class="danger" data-del="${esc(p.id)}">✕</button>`}</td></tr>`).join('');
   $('spinBtn').disabled = spinning || !$('who').value || !left.length;
 }
 
-function fillSelect(id, label, options, value) {
-  const el = $(id);
-  el.innerHTML = `<option value="">None</option>` + options.map((o) => `<option${o === value ? ' selected' : ''}>${esc(o)}</option>`).join('');
-  el.disabled = assigned().length > 0;
-}
-function renderBlock() {
-  const b = state.block || {};
+function renderBlockSelect(player, key) {
+  const b = player.block || {};
   const o = Rules.blockOptions(b, state.faction);
-  fillSelect('blockRole', 'Role', o.roles, b.role);
-  fillSelect('blockClass', 'Class', o.classes, b.className);
-  fillSelect('blockRace', 'Race', o.races, b.race);
+  const options = key === 'role' ? o.roles : key === 'className' ? o.classes : o.races;
+  return `<select data-block="${key}" data-player="${esc(player.id)}"${player.role ? ' disabled' : ''}>` +
+    `<option value="">None</option>` + options.map((value) =>
+      `<option value="${esc(value)}"${value === b[key] ? ' selected' : ''}>${esc(value)}</option>`).join('') + '</select>';
 }
 
 function drawWheel(items, angle) {
@@ -80,18 +76,23 @@ async function doSpin() {
   try {
     state = await api('GET', '/api/state');
     const done = assigned();
+    const player = state.players.find((p) => p.id === id);
+    if (!player) throw new Error('That person is no longer in the party.');
+    const block = player.block || {};
     // one entry per open slot, so DPS (2 slots) is twice as likely as a single-slot role
     $('stage').textContent = 'Spinning for role…';
-    const role = await spin(Rules.remainingRoles(done, state.block));
+    const roles = Rules.remainingRoles(done).filter((role) => role !== block.role);
+    if (!roles.length) throw new Error('No available roles for this person. Change their blocklist or choose someone else.');
+    const role = await spin(roles);
     $('stage').textContent = 'Role: ' + role;
     await pause(600);
-    const classes = Rules.availableClasses(role, done, state.faction, state.block);
+    const classes = Rules.availableClasses(role, done, state.faction, block);
     $('stage').textContent = 'Spinning for class…';
     const className = await spin(classes);
     $('stage').textContent = `${role} ${className}`;
     await pause(600);
     $('stage').textContent = 'Spinning for race…';
-    const race = await spin(Rules.racesFor(className, state.faction, state.block));
+    const race = await spin(Rules.racesFor(className, state.faction, block));
     $('stage').textContent = `🎉 ${race} ${className} (${role})!`;
     state = await api('POST', `/api/players/${id}/assign`, { role, className, race });
   } catch (e) {
@@ -114,8 +115,14 @@ $('addForm').addEventListener('submit', async (e) => {
 $('faction').addEventListener('change', () => run(() => api('POST', '/api/faction', { faction: $('faction').value })));
 $('resetBtn').addEventListener('click', () => confirm('Clear everyone\'s spins?') && run(() => api('POST', '/api/reset')));
 $('party').addEventListener('click', (e) => { const id = e.target.dataset.del; if (id) run(() => api('DELETE', `/api/players/${id}`)); });
-['blockRole', 'blockClass', 'blockRace'].forEach((id) => $(id).addEventListener('change', () =>
-  run(() => api('POST', '/api/block', { role: $('blockRole').value, className: $('blockClass').value, race: $('blockRace').value }))));
+$('party').addEventListener('change', (e) => {
+  const select = e.target.closest('select[data-block]');
+  if (!select) return;
+  const row = select.closest('tr');
+  const block = {};
+  row.querySelectorAll('select[data-block]').forEach((el) => { block[el.dataset.block] = el.value; });
+  run(() => api('POST', `/api/players/${select.dataset.player}/block`, block));
+});
 $('spinBtn').addEventListener('click', doSpin);
 $('who').addEventListener('change', render);
 
