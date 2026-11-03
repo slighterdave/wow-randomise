@@ -8,6 +8,18 @@ button:disabled { opacity: .5; cursor: default; }
 button.danger { background: #8b1a1a; }
 .msg { color: #ff8080; min-height: 1.2em; }
 .stage { font-size: 1.4rem; color: #ffd100; min-height: 1.6em; }
-canvas { max-width: 100%; }
-table { width: 100%; border-collapse: collapse; margin: .5rem 0; }
-th, td { border-bottom: 1px solid #6b4f2a; padding: .4rem; }
+canvas { max-width: 100%; height: auto; }
+table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: .5rem 0; }
+th, td { border-bottom: 1px solid #6b4f2a; padding: .4rem; vertical-align: top; overflow-wrap: anywhere; }
+th:last-child, td:last-child { width: 3rem; }
+
+@media (max-width: 560px) {
+  table, tbody { display: block; }
+  thead { display: none; }
+  tbody { display: grid; gap: .6rem; }
+  tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: #1b1410; border: 1px solid #6b4f2a; border-radius: 4px; }
+  td { display: flex; flex-direction: column; min-width: 0; border-bottom: 1px solid #6b4f2a; }
+  td::before { content: attr(data-label); color: #ffd100; font-size: .8rem; }
+  td:last-child { grid-column: 1 / -1; width: auto; align-items: flex-end; border-bottom: 0; }
+  td:last-child::before { content: none; }
+}

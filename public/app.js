@@ -21,14 +21,11 @@ function render() {
     .map((p) => `<option value="${esc(p.id)}">${esc(p.characterName)}</option>`).join('');
   if (cur) $('who').value = cur;
   const player = state.players.find((p) => p.id === $('who').value);
-  $('blockControls').innerHTML = player
-    ? ['role', 'className', 'race'].map((key) =>
-      `<label>Block ${key === 'className' ? 'class' : key}: ${renderBlockSelect(player, key)}</label>`).join('')
-    : '<p>Add a person to set their block list.</p>';
+  renderBlockControls(player);
   const left = Rules.remainingRoles(assigned());
   $('needed').textContent = left.length ? 'Still needed: ' + left.join(', ') : 'Party complete! 🎉';
   $('party').querySelector('tbody').innerHTML = state.players.map((p) =>
-    `<tr><td>${esc(p.characterName)}</td><td>${esc(p.realName)}</td><td>${esc(p.role)}</td><td>${esc(p.className)}</td><td>${esc(p.race)}</td>` +
+    `<tr><td data-label="Character">${esc(p.characterName)}</td><td data-label="Real name">${esc(p.realName)}</td><td data-label="Role">${esc(p.role)}</td><td data-label="Class">${esc(p.className)}</td><td data-label="Race">${esc(p.race)}</td>` +
     `<td>${p.role ? '' : `<button class="danger" data-del="${esc(p.id)}">✕</button>`}</td></tr>`).join('');
   $('spinBtn').disabled = spinning || !$('who').value || !left.length;
 }
@@ -40,6 +37,41 @@ function renderBlockSelect(player, key) {
   return `<select data-block="${key}" data-player="${esc(player.id)}"${player.role ? ' disabled' : ''}>` +
     `<option value="">None</option>` + options.map((value) =>
       `<option value="${esc(value)}"${value === b[key] ? ' selected' : ''}>${esc(value)}</option>`).join('') + '</select>';
+}
+
+function renderBlockControls(player) {
+  const controls = $('blockControls');
+  if (!player) {
+    if (controls.dataset.player !== undefined || !controls.querySelector('p')) {
+      delete controls.dataset.player;
+      controls.innerHTML = '<p>Add a person to set their block list.</p>';
+    }
+    return;
+  }
+  if (controls.dataset.player !== player.id) {
+    controls.dataset.player = player.id;
+    controls.innerHTML = ['role', 'className', 'race'].map((key) =>
+      `<label>Block ${key === 'className' ? 'class' : key}: ${renderBlockSelect(player, key)}</label>`).join('');
+  }
+
+  const block = player.block || {};
+  const options = Rules.blockOptions(block, state.faction);
+  ['role', 'className', 'race'].forEach((key) => {
+    const select = controls.querySelector(`select[data-block="${key}"]`);
+    const values = key === 'role' ? options.roles : key === 'className' ? options.classes : options.races;
+    const currentOptions = Array.from(select.options, (option) => option.value);
+    const nextOptions = ['', ...values];
+    if (currentOptions.length !== nextOptions.length || currentOptions.some((value, i) => value !== nextOptions[i])) {
+      select.replaceChildren(...nextOptions.map((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value || 'None';
+        return option;
+      }));
+    }
+    select.value = block[key] || '';
+    select.disabled = !!player.role;
+  });
 }
 
 function drawWheel(items, angle) {
