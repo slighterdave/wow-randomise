@@ -1,15 +1,15 @@
 # ⚔️ wow-randomise
 
-A tiny website for a 4-man WoW Classic ("Forever") party. Everyone types in their
+A tiny website for a 5-man WoW Classic ("Forever") party. Everyone types in their
 character name + real name, then spins a wheel for **role → class → race**.
 
-* The party is **1 Tank, 1 Healer, 2 DPS**. The role wheel only contains roles still open,
+* The party is **1 Tank, 1 Healer, 3 DPS**. The role wheel only contains roles still open,
   so the last person automatically gets whatever is left (e.g. 1 tank + 2 DPS taken → healer).
 * Every **class can only be used once** (one warrior!). Once someone gets it, it leaves the pool.
   The wheel also never offers a class that would make a missing role impossible to fill.
 * **Races can repeat** (as many undead as you like). Only races that can really be that class appear.
 * Optional faction lock (Alliance / Horde / Any) so you can all play together.
-* Names and results are saved on the server, so all four of you see the same party.
+* Names and results are saved on the server, so all five of you see the same party.
 
 Races/classes are the original Classic ones: Human, Dwarf, Night Elf, Gnome, Orc, Undead, Tauren, Troll;
 Warrior, Paladin, Druid, Priest, Shaman, Hunter, Rogue, Mage, Warlock.

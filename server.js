@@ -7,12 +7,15 @@ const Rules = require('./public/rules.js');
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data', 'state.json');
 const PUBLIC = path.join(__dirname, 'public');
-const MAX_PLAYERS = 4;
+const MAX_PLAYERS = 5;
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
 
 function load() {
-  try { return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); }
-  catch (e) { return { faction: 'Any', players: [] }; }
+  try {
+    const s = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    s.block = s.block || {};
+    return s;
+  } catch (e) { return { faction: 'Any', players: [], block: {} }; }
 }
 function save(state) {
   fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
@@ -42,6 +45,16 @@ function handleApi(req, res, body) {
     if (!['Any', 'Alliance', 'Horde'].includes(body.faction)) return send(400, { error: 'Bad faction.' });
     if (assigned(state).length) return send(400, { error: 'Reset before changing faction.' });
     state.faction = body.faction;
+    if (!Rules.validBlock(state.block, state.faction)) state.block = {};
+    save(state);
+    return send(200, state);
+  }
+  if (req.method === 'POST' && url === '/api/block') {
+    if (assigned(state).length) return send(400, { error: 'Reset before changing the blocklist.' });
+    const block = {};
+    ['role', 'className', 'race'].forEach((k) => { block[k] = String(body[k] || ''); if (!block[k]) delete block[k]; });
+    if (!Rules.validBlock(block, state.faction)) return send(400, { error: 'Invalid blocklist.' });
+    state.block = block;
     save(state);
     return send(200, state);
   }
@@ -59,7 +72,7 @@ function handleApi(req, res, body) {
     const player = state.players.find((p) => p.id === m[1]);
     if (!player) return send(404, { error: 'No such player.' });
     if (player.role) return send(400, { error: 'Already rolled.' });
-    const err = Rules.validate(assigned(state), body, state.faction);
+    const err = Rules.validate(assigned(state), body, state.faction, state.block);
     if (err) return send(400, { error: err });
     Object.assign(player, { role: body.role, className: body.className, race: body.race });
     save(state);
